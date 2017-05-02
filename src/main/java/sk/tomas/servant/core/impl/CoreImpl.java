@@ -41,10 +41,17 @@ public class CoreImpl implements Core {
         for (Method method : object.getClass().getMethods()) {
             if (method.isAnnotationPresent(Bean.class)) {
                 Object generatedObject = method.invoke(object);
-                if (generatedObject == null) {
-                    throw new CannotCreateBeanExcetion(method.getName());
+
+                String name;
+                if (method.getAnnotation(Bean.class).value().equals("")) {
+                    name = method.getName();
+                } else {
+                    name = method.getAnnotation(Bean.class).value();
                 }
-                beans.put(method.getName(), generatedObject);
+                if (generatedObject == null) {
+                    throw new CannotCreateBeanExcetion(name);
+                }
+                beans.put(name, generatedObject);
             }
         }
     }
