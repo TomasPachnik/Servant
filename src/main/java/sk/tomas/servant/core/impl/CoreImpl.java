@@ -1,6 +1,6 @@
 package sk.tomas.servant.core.impl;
 
-import sk.tomas.servant.annotation.Autowired;
+import sk.tomas.servant.annotation.Inject;
 import sk.tomas.servant.annotation.Bean;
 import sk.tomas.servant.annotation.Config;
 import sk.tomas.servant.core.Core;
@@ -61,12 +61,12 @@ public class CoreImpl implements Core {
     private void fill() throws IllegalArgumentException, IllegalAccessException, BeanNotFoundException {
         for (Map.Entry<String, Object> entry : beans.entrySet()) {
             for (Field field : entry.getValue().getClass().getDeclaredFields()) {
-                if (field.isAnnotationPresent(Autowired.class)) {
+                if (field.isAnnotationPresent(Inject.class)) {
                     field.setAccessible(true);
-                    if (field.getAnnotation(Autowired.class).value().equals("")) {
+                    if (field.getAnnotation(Inject.class).value().equals("")) {
                         field.set(entry.getValue(), getByName(field.getName()));
                     } else {
-                        field.set(entry.getValue(), getByName(field.getAnnotation(Autowired.class).value()));
+                        field.set(entry.getValue(), getByName(field.getAnnotation(Inject.class).value()));
                     }
                 }
             }

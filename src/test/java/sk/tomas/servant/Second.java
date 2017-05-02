@@ -1,6 +1,6 @@
 package sk.tomas.servant;
 
-import sk.tomas.servant.annotation.Autowired;
+import sk.tomas.servant.annotation.Inject;
 
 /**
  * Created by Tomas Pachnik on 02-May-17.
@@ -9,7 +9,7 @@ public class Second {
 
     private String second = "second";
 
-    @Autowired
+    @Inject
     private First first;
 
     public String getSecond() {
