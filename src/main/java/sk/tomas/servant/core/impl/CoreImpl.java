@@ -4,10 +4,7 @@ import sk.tomas.servant.annotation.Autowired;
 import sk.tomas.servant.annotation.Bean;
 import sk.tomas.servant.annotation.Config;
 import sk.tomas.servant.core.Core;
-import sk.tomas.servant.exception.BeanNotFoundException;
-import sk.tomas.servant.exception.CannotCreateBeanExcetion;
-import sk.tomas.servant.exception.MultipleBeansWithSameNameException;
-import sk.tomas.servant.exception.WrongConfigClassException;
+import sk.tomas.servant.exception.*;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -22,13 +19,12 @@ public class CoreImpl implements Core {
 
     private Map<String, Object> beans;
 
-    public CoreImpl(Class<?> objectClass) {
+    public CoreImpl(Class<?> objectClass) throws ServantException {
         beans = new HashMap<>();
         try {
             build(objectClass);
             fill();
-        } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | WrongConfigClassException
-                | MultipleBeansWithSameNameException | BeanNotFoundException | CannotCreateBeanExcetion e) {
+        } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
             System.err.println(e);
         }
     }
