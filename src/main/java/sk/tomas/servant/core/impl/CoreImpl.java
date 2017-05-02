@@ -5,6 +5,7 @@ import sk.tomas.servant.annotation.Bean;
 import sk.tomas.servant.annotation.Config;
 import sk.tomas.servant.core.Core;
 import sk.tomas.servant.exception.BeanNotFoundException;
+import sk.tomas.servant.exception.CannotCreateBeanExcetion;
 import sk.tomas.servant.exception.MultipleBeansWithSameNameException;
 import sk.tomas.servant.exception.WrongConfigClassException;
 
@@ -27,19 +28,22 @@ public class CoreImpl implements Core {
             build(objectClass);
             fill();
         } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | WrongConfigClassException
-                | MultipleBeansWithSameNameException | BeanNotFoundException e) {
+                | MultipleBeansWithSameNameException | BeanNotFoundException | CannotCreateBeanExcetion e) {
             System.err.println(e);
         }
     }
 
     private void build(Class<?> objectClass) throws WrongConfigClassException, InstantiationException, IllegalAccessException,
-            MultipleBeansWithSameNameException, IllegalArgumentException, InvocationTargetException {
+            MultipleBeansWithSameNameException, IllegalArgumentException, InvocationTargetException, CannotCreateBeanExcetion {
         checkConfigClass(objectClass);
         Object object = objectClass.newInstance();
 
         for (Method method : object.getClass().getMethods()) {
             if (method.isAnnotationPresent(Bean.class)) {
                 Object generatedObject = method.invoke(object);
+                if (generatedObject == null) {
+                    throw new CannotCreateBeanExcetion(method.getName());
+                }
                 beans.put(method.getName(), generatedObject);
             }
         }
