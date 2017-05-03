@@ -82,4 +82,16 @@ public class CoreImpl implements Core {
         }
     }
 
+    @Override
+    public void updateByName(String name, Object obj) throws ServantException {
+        if (beans.containsKey(name)) {
+            if (beans.get(name).getClass().equals(obj.getClass())) {
+                beans.put(name, obj);
+            } else
+                throw new WrongObjectTypeException(name, beans.get(name).getClass(), obj.getClass());
+        } else {
+            throw new BeanNotFoundException(name);
+        }
+    }
+
 }
