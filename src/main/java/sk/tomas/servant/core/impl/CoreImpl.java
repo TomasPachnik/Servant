@@ -25,7 +25,7 @@ public class CoreImpl implements Core {
             build(objectClass);
             fill();
         } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-            System.err.println(e);
+            throw new ServantException("Could not start Servant!", e);
         }
     }
 
@@ -58,7 +58,7 @@ public class CoreImpl implements Core {
         }
     }
 
-    private void fill() throws IllegalArgumentException, IllegalAccessException, BeanNotFoundException {
+    private void fill() throws IllegalAccessException, BeanNotFoundException {
         for (Map.Entry<String, Object> entry : beans.entrySet()) {
             for (Field field : entry.getValue().getClass().getDeclaredFields()) {
                 if (field.isAnnotationPresent(Inject.class)) {
