@@ -1,6 +1,7 @@
 package sk.tomas.servant;
 
 import sk.tomas.servant.annotation.Inject;
+import sk.tomas.servant.core.Core;
 
 /**
  * Created by Tomas Pachnik on 02-May-17.
@@ -8,6 +9,10 @@ import sk.tomas.servant.annotation.Inject;
 public class First {
 
     private String first = "first";
+
+    public First() {
+        Core.AddToContext(this);
+    }
 
     @Inject
     private Second third;

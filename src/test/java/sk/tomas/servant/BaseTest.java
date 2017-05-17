@@ -2,7 +2,6 @@ package sk.tomas.servant;
 
 import org.junit.Before;
 import sk.tomas.servant.core.Core;
-import sk.tomas.servant.core.impl.CoreImpl;
 import sk.tomas.servant.exception.ServantException;
 
 /**
@@ -11,11 +10,9 @@ import sk.tomas.servant.exception.ServantException;
 
 public class BaseTest {
 
-    protected Core core;
-
     @Before
     public void iniciazize() throws ServantException {
-        core = new CoreImpl(Configuration.class);
+        Core.addConfiguration(Configuration.class);
     }
 
 }
