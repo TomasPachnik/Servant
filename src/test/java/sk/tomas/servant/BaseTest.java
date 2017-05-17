@@ -1,7 +1,7 @@
 package sk.tomas.servant;
 
 import org.junit.Before;
-import sk.tomas.servant.core.Core;
+import sk.tomas.servant.core.Servant;
 import sk.tomas.servant.exception.ServantException;
 
 /**
@@ -12,7 +12,7 @@ public class BaseTest {
 
     @Before
     public void iniciazize() throws ServantException {
-        Core.addConfiguration(Configuration.class);
+        Servant.addConfiguration(Configuration.class);
     }
 
 }

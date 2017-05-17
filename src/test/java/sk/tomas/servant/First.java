@@ -1,7 +1,7 @@
 package sk.tomas.servant;
 
 import sk.tomas.servant.annotation.Inject;
-import sk.tomas.servant.core.Core;
+import sk.tomas.servant.core.Servant;
 
 /**
  * Created by Tomas Pachnik on 02-May-17.
@@ -11,7 +11,7 @@ public class First {
     private String first = "first";
 
     public First() {
-        Core.AddToContext(this);
+        Servant.AddToContext(this);
     }
 
     @Inject

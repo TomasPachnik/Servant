@@ -14,9 +14,9 @@ import java.util.Map;
 /**
  * Created by Tomas Pachnik on 27-Apr-17.
  */
-public class Core {
+public class Servant {
 
-    private static Map<String, Object> beans;
+    private static Map<String, Object> map;
 
     public static void addConfiguration(Class<?> objectClass) {
         checkMap();
@@ -28,16 +28,16 @@ public class Core {
         }
     }
 
-    public static void AddToContext(Object o) {
+    public static void addToContext(Object o) {
         addToContext(o, null);
     }
 
     public static void addToContext(Object o, String name) {
         checkMap();
         if (name == null || name.isEmpty()) {
-            beans.put(o.getClass().getSimpleName(), o);
+            map.put(o.getClass().getSimpleName(), o);
         } else {
-            beans.put(name, o);
+            map.put(name, o);
         }
         try {
             fill();
@@ -64,7 +64,7 @@ public class Core {
                 if (generatedObject == null) {
                     throw new CannotCreateBeanExcetion(name);
                 }
-                beans.put(name, generatedObject);
+                map.put(name, generatedObject);
             }
         }
     }
@@ -76,7 +76,7 @@ public class Core {
     }
 
     private static void fill() throws IllegalAccessException, BeanNotFoundException {
-        for (Map.Entry<String, Object> entry : beans.entrySet()) {
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
             for (Field field : entry.getValue().getClass().getDeclaredFields()) {
                 if (field.isAnnotationPresent(Inject.class)) {
                     field.setAccessible(true);
@@ -91,27 +91,27 @@ public class Core {
     }
 
     public static Object getByName(String name) throws BeanNotFoundException {
-        if (beans.containsKey(name)) {
-            return beans.get(name);
+        if (map.containsKey(name)) {
+            return map.get(name);
         } else {
             throw new BeanNotFoundException(name);
         }
     }
 
     public static void updateByName(String name, Object obj) throws ServantException {
-        if (beans.containsKey(name)) {
-            if (beans.get(name).getClass().equals(obj.getClass())) {
-                beans.put(name, obj);
+        if (map.containsKey(name)) {
+            if (map.get(name).getClass().equals(obj.getClass())) {
+                map.put(name, obj);
             } else
-                throw new WrongObjectTypeException(name, beans.get(name).getClass(), obj.getClass());
+                throw new WrongObjectTypeException(name, map.get(name).getClass(), obj.getClass());
         } else {
             throw new BeanNotFoundException(name);
         }
     }
 
     private static void checkMap() {
-        if (beans == null) {
-            beans = new HashMap<>();
+        if (map == null) {
+            map = new HashMap<>();
         }
     }
 
