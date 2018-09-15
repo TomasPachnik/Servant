@@ -11,7 +11,7 @@ public class First {
     private String first = "first";
 
     public First() {
-        Servant.AddToContext(this);
+        Servant.addToContext(this);
     }
 
     @Inject

@@ -47,7 +47,7 @@ public class Servant {
     }
 
     private static void build(Class<?> objectClass) throws WrongConfigClassException, InstantiationException, IllegalAccessException,
-            MultipleBeansWithSameNameException, IllegalArgumentException, InvocationTargetException, CannotCreateBeanExcetion {
+            IllegalArgumentException, InvocationTargetException, CannotCreateBeanExcetion {
         checkConfigClass(objectClass);
         Object object = objectClass.newInstance();
 
