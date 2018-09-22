@@ -3,13 +3,16 @@ package sk.tomas.servant.core;
 import sk.tomas.servant.annotation.Inject;
 import sk.tomas.servant.annotation.Bean;
 import sk.tomas.servant.annotation.Config;
+import sk.tomas.servant.annotation.PackageScan;
 import sk.tomas.servant.exception.*;
 
+import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.Map;
+import java.net.URL;
+import java.util.*;
 
 /**
  * Created by Tomas Pachnik on 27-Apr-17.
@@ -23,7 +26,7 @@ public class Servant {
         try {
             build(objectClass);
             fill();
-        } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | ServantException e) {
+        } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | ServantException | NoSuchMethodException | IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
     }
@@ -47,19 +50,24 @@ public class Servant {
     }
 
     private static void build(Class<?> objectClass) throws WrongConfigClassException, InstantiationException, IllegalAccessException,
-            IllegalArgumentException, InvocationTargetException, CannotCreateBeanExcetion {
+            IllegalArgumentException, InvocationTargetException, CannotCreateBeanExcetion, NoSuchMethodException, IOException, ClassNotFoundException {
         checkConfigClass(objectClass);
-        Object object = objectClass.newInstance();
+        Object generatedObject = objectClass.newInstance();
+        if (generatedObject == null) {
+            throw new CannotCreateBeanExcetion(objectClass.getName());
+        }
+        scanPackage(objectClass);
+        buildFromConfig(generatedObject);
+    }
 
+    private static void buildFromConfig(Object object) throws CannotCreateBeanExcetion, InvocationTargetException, IllegalAccessException {
         for (Method method : object.getClass().getMethods()) {
             if (method.isAnnotationPresent(Bean.class)) {
                 Object generatedObject = method.invoke(object);
 
-                String name;
-                if (method.getAnnotation(Bean.class).value().equals("")) {
+                String name = method.getAnnotation(Bean.class).value();
+                if ("".equals(name)) {
                     name = method.getName();
-                } else {
-                    name = method.getAnnotation(Bean.class).value();
                 }
                 if (generatedObject == null) {
                     throw new CannotCreateBeanExcetion(name);
@@ -67,6 +75,63 @@ public class Servant {
                 map.put(name, generatedObject);
             }
         }
+    }
+
+    private static void scanPackage(Class<?> objectClass) throws IOException, ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException, CannotCreateBeanExcetion {
+        if (objectClass != null && objectClass.isAnnotationPresent(PackageScan.class)) {
+            if (!objectClass.getAnnotation(PackageScan.class).value().equals("")) {
+                Class[] classes = getClasses(objectClass.getAnnotation(PackageScan.class).value());
+                for (Class clazz : classes) {
+                    if (clazz.isAnnotationPresent(Bean.class)) {
+                        Object generatedObject = clazz.newInstance();
+
+                        String name = ((Bean) clazz.getAnnotation(Bean.class)).value();
+                        if ("".equals(name)) {
+                            name = clazz.getSimpleName().toLowerCase();
+                        }
+                        if (generatedObject == null) {
+                            throw new CannotCreateBeanExcetion(name);
+                        }
+                        map.put(name, clazz.newInstance());
+                    }
+                }
+            }
+        }
+    }
+
+    private static Class[] getClasses(String packageName)
+            throws ClassNotFoundException, IOException {
+        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        assert classLoader != null;
+        String path = packageName.replace('.', '/');
+        Enumeration<URL> resources = classLoader.getResources(path);
+        List<File> dirs = new ArrayList<>();
+        while (resources.hasMoreElements()) {
+            URL resource = resources.nextElement();
+            dirs.add(new File(resource.getFile()));
+        }
+        ArrayList<Class> classes = new ArrayList<>();
+        for (File directory : dirs) {
+            classes.addAll(findClasses(directory, packageName));
+        }
+        return classes.toArray(new Class[classes.size()]);
+    }
+
+    private static List<Class> findClasses(File directory, String packageName) throws ClassNotFoundException {
+        List<Class> classes = new ArrayList<>();
+        if (!directory.exists()) {
+            return classes;
+        }
+        File[] files = directory.listFiles();
+        for (File file : files) {
+            if (file.isDirectory()) {
+                assert !file.getName().contains(".");
+                classes.addAll(findClasses(file, packageName + "." + file.getName()));
+            } else if (file.getName().endsWith(".class")) {
+                classes.add(Class.forName(packageName + '.' + file.getName().substring(0, file.getName().length() - 6)));
+            }
+        }
+        return classes;
     }
 
     private static void checkConfigClass(Class<?> objectClass) throws WrongConfigClassException {
