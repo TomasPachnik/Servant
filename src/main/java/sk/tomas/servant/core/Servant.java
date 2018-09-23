@@ -49,6 +49,15 @@ public class Servant {
         }
     }
 
+    public static void scanPackage(String packageName) {
+        checkMap();
+        try {
+            scanPackagePrivate(packageName);
+        } catch (IOException | ClassNotFoundException | InstantiationException | IllegalAccessException | CannotCreateBeanExcetion e) {
+            e.printStackTrace();
+        }
+    }
+
     private static void build(Class<?>[] objectClass) throws WrongConfigClassException, InstantiationException, IllegalAccessException,
             IllegalArgumentException, InvocationTargetException, CannotCreateBeanExcetion, IOException, ClassNotFoundException {
         for (Class<?> clazz : objectClass) {
@@ -57,7 +66,7 @@ public class Servant {
             if (generatedObject == null) {
                 throw new CannotCreateBeanExcetion(clazz.getName());
             }
-            scanPackage(clazz);
+            scanPackagePrivate(clazz);
             buildFromConfig(generatedObject);
         }
 
@@ -90,25 +99,28 @@ public class Servant {
         }
     }
 
-    private static void scanPackage(Class<?> objectClass) throws
+    private static void scanPackagePrivate(String packageName) throws IOException, ClassNotFoundException, IllegalAccessException, InstantiationException, CannotCreateBeanExcetion {
+        for (Class clazz : getClasses(packageName)) {
+            if (clazz.isAnnotationPresent(Bean.class)) {
+                Object generatedObject = clazz.newInstance();
+
+                String name = ((Bean) clazz.getAnnotation(Bean.class)).value();
+                if ("".equals(name)) {
+                    name = clazz.getSimpleName().toLowerCase();
+                }
+                if (generatedObject == null) {
+                    throw new CannotCreateBeanExcetion(name);
+                }
+                map.put(name, clazz.newInstance());
+            }
+        }
+    }
+
+    private static void scanPackagePrivate(Class<?> objectClass) throws
             IOException, ClassNotFoundException, IllegalAccessException, InstantiationException, CannotCreateBeanExcetion {
         if (objectClass != null && objectClass.isAnnotationPresent(PackageScan.class)) {
             if (!objectClass.getAnnotation(PackageScan.class).value().equals("")) {
-                Class[] classes = getClasses(objectClass.getAnnotation(PackageScan.class).value());
-                for (Class clazz : classes) {
-                    if (clazz.isAnnotationPresent(Bean.class)) {
-                        Object generatedObject = clazz.newInstance();
-
-                        String name = ((Bean) clazz.getAnnotation(Bean.class)).value();
-                        if ("".equals(name)) {
-                            name = clazz.getSimpleName().toLowerCase();
-                        }
-                        if (generatedObject == null) {
-                            throw new CannotCreateBeanExcetion(name);
-                        }
-                        map.put(name, clazz.newInstance());
-                    }
-                }
+                scanPackagePrivate(objectClass.getAnnotation(PackageScan.class).value());
             }
         }
     }
