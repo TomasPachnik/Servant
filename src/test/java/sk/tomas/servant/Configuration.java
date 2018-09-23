@@ -8,7 +8,6 @@ import sk.tomas.servant.annotation.PackageScan;
  * Created by Tomas Pachnik on 02-May-17.
  */
 
-@Config
 @PackageScan("sk.tomas.servant")
 public class Configuration {
 

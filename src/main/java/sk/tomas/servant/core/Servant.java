@@ -8,6 +8,7 @@ import sk.tomas.servant.exception.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -134,10 +135,24 @@ public class Servant {
         return classes;
     }
 
+    /**
+     * check if class itself is marked with @Config, or one of her annotations as marked with a @Config
+     *
+     * @param objectClass
+     * @throws WrongConfigClassException
+     */
     private static void checkConfigClass(Class<?> objectClass) throws WrongConfigClassException {
-        if (objectClass == null || !objectClass.isAnnotationPresent(Config.class)) {
-            throw new WrongConfigClassException();
+        if (objectClass != null) {
+            if (objectClass.isAnnotationPresent(Config.class)) {
+                return;
+            }
+            for (Annotation annotation : objectClass.getAnnotations()) {
+                if (annotation.annotationType().isAnnotationPresent(Config.class)) {
+                    return;
+                }
+            }
         }
+        throw new WrongConfigClassException();
     }
 
     private static void fill() throws IllegalAccessException, BeanNotFoundException {
