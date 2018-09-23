@@ -11,7 +11,7 @@ import sk.tomas.servant.exception.ServantException;
 public class BaseTest {
 
     @Before
-    public void iniciazize() throws ServantException {
+    public void iniciazize() {
         Servant.addConfiguration(Configuration.class);
     }
 

@@ -1,9 +1,6 @@
 package sk.tomas.servant.core;
 
-import sk.tomas.servant.annotation.Inject;
-import sk.tomas.servant.annotation.Bean;
-import sk.tomas.servant.annotation.Config;
-import sk.tomas.servant.annotation.PackageScan;
+import sk.tomas.servant.annotation.*;
 import sk.tomas.servant.exception.*;
 
 import java.io.File;
@@ -22,15 +19,17 @@ public class Servant {
 
     private static Map<String, Object> map;
 
-    public static void addConfiguration(Class<?> objectClass) {
+    public static void addConfiguration(Class<?>... objectClass) {
         checkMap();
         try {
             build(objectClass);
             fill();
-        } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | ServantException | NoSuchMethodException | IOException | ClassNotFoundException e) {
+            postInit();
+        } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | ServantException | IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
     }
+
 
     public static void addToContext(Object o) {
         addToContext(o, null);
@@ -50,15 +49,18 @@ public class Servant {
         }
     }
 
-    private static void build(Class<?> objectClass) throws WrongConfigClassException, InstantiationException, IllegalAccessException,
-            IllegalArgumentException, InvocationTargetException, CannotCreateBeanExcetion, NoSuchMethodException, IOException, ClassNotFoundException {
-        checkConfigClass(objectClass);
-        Object generatedObject = objectClass.newInstance();
-        if (generatedObject == null) {
-            throw new CannotCreateBeanExcetion(objectClass.getName());
+    private static void build(Class<?>[] objectClass) throws WrongConfigClassException, InstantiationException, IllegalAccessException,
+            IllegalArgumentException, InvocationTargetException, CannotCreateBeanExcetion, IOException, ClassNotFoundException {
+        for (Class<?> clazz : objectClass) {
+            checkConfigClass(clazz);
+            Object generatedObject = clazz.newInstance();
+            if (generatedObject == null) {
+                throw new CannotCreateBeanExcetion(clazz.getName());
+            }
+            scanPackage(clazz);
+            buildFromConfig(generatedObject);
         }
-        scanPackage(objectClass);
-        buildFromConfig(generatedObject);
+
     }
 
     private static void buildFromConfig(Object object) throws CannotCreateBeanExcetion, InvocationTargetException, IllegalAccessException {
@@ -78,7 +80,18 @@ public class Servant {
         }
     }
 
-    private static void scanPackage(Class<?> objectClass) throws IOException, ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException, CannotCreateBeanExcetion {
+    private static void postInit() throws InvocationTargetException, IllegalAccessException {
+        for (Object o : map.values()) {
+            for (Method m : o.getClass().getMethods()) {
+                if (m.isAnnotationPresent(PostInit.class)) {
+                    m.invoke(o);
+                }
+            }
+        }
+    }
+
+    private static void scanPackage(Class<?> objectClass) throws
+            IOException, ClassNotFoundException, IllegalAccessException, InstantiationException, CannotCreateBeanExcetion {
         if (objectClass != null && objectClass.isAnnotationPresent(PackageScan.class)) {
             if (!objectClass.getAnnotation(PackageScan.class).value().equals("")) {
                 Class[] classes = getClasses(objectClass.getAnnotation(PackageScan.class).value());
