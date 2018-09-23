@@ -53,7 +53,9 @@ public class Servant {
         checkMap();
         try {
             scanPackagePrivate(packageName);
-        } catch (IOException | ClassNotFoundException | InstantiationException | IllegalAccessException | CannotCreateBeanExcetion e) {
+            fill();
+            postInit();
+        } catch (IOException | ClassNotFoundException | InstantiationException | IllegalAccessException | CannotCreateBeanExcetion | InvocationTargetException | BeanNotFoundException e) {
             e.printStackTrace();
         }
     }
